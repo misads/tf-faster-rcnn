@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import os
 from datasets.imdb import imdb
-import datasets.ds_utils as ds_utils
+#import datasets.ds_utils as ds_utils
 import xml.etree.ElementTree as ET
 import numpy as np
 import scipy.sparse
@@ -129,6 +129,7 @@ class pascal_voc(imdb):
 
         return roidb
 
+    '''
     def _load_rpn_roidb(self, gt_roidb):
         filename = self.config['rpn_file']
         print('loading {}'.format(filename))
@@ -137,6 +138,8 @@ class pascal_voc(imdb):
         with open(filename, 'rb') as f:
             box_list = pickle.load(f)
         return self.create_roidb_from_box_list(box_list, gt_roidb)
+    '''
+
 
     def _load_pascal_annotation(self, index):
         """

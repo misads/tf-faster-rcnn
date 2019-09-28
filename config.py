@@ -6,6 +6,8 @@ class Config(object):
     PREPROC_PIXEL_MEAN = [123.675, 116.28, 103.53]
     PREPROC_PIXEL_STD = [58.395, 57.12, 57.375]
 
+    DATA_DIR = './data'
+
 
 cfg = Config()
 
