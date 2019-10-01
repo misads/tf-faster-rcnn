@@ -8,7 +8,17 @@ class Config(object):
 
     DATA_DIR = './data'
 
+    ANCHOR_SCALES = [8, 16, 32]
+    ANCHOR_RATIOS = [0.5, 1, 2]
+
+    """train configs"""
+    TRAIN_WEIGHT_DECAY = 0.0001
+
+
+    """test configs"""
+
 
 cfg = Config()
+
 
 
