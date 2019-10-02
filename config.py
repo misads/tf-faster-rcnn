@@ -11,12 +11,15 @@ class Config(object):
     ANCHOR_SCALES = [8, 16, 32]
     ANCHOR_RATIOS = [0.5, 1, 2]
 
+    # Number of filters for the RPN layer, 512 for VGG16
+    RPN_CHANNELS = 512
+
     """train configs"""
     TRAIN_WEIGHT_DECAY = 0.0001
 
 
     """test configs"""
-
+    TEST_MODE = 'nms'
 
 cfg = Config()
 
