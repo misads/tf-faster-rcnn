@@ -1,5 +1,5 @@
 # tf-faster-rcnn
-A Simplification and Explanation for [TensorFlow implementation of Faster R-CNN by Xinlei Chen](https://github.com/endernewton/tf-faster-rcnn).
+A Simplification and Explanation of repo [[endernewton/tf-faster-rcnn by Xinlei Chen]](https://github.com/endernewton/tf-faster-rcnn).
 
 
 ### 目录结构
