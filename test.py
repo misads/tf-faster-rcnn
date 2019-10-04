@@ -7,7 +7,8 @@ from data_loader import get_voc_dataset
 import cv2
 
 from models.vgg16 import Vgg16
-from utils.bbox import _get_blobs, _clip_boxes, bbox_transform_inv
+from data_loader import _get_blobs
+from utils.bbox import _clip_boxes, bbox_transform_inv
 
 
 def test_pic(sess, net, path, weights_filename, max_per_image=100, thresh=0.):
@@ -179,16 +180,12 @@ def im_detect(sess, net, im):
     im_blob = blobs['data']
     blobs['im_info'] = np.array([im_blob.shape[1], im_blob.shape[2], im_scales[0]], dtype=np.float32)
 
-    import pickle
-    with open('blobs.pk', 'wb') as f:
-        pickle.dump(blobs, f)
-
-    _, scores, bbox_pred, rois, roi_scores, anchors = net.test_image(sess, blobs['data'], blobs['im_info'])
+    _, scores, bbox_pred, rois = net.test_image(sess, blobs['data'], blobs['im_info'])
 
     boxes = rois[:, 1:5] / im_scales[0]
     scores = np.reshape(scores, [scores.shape[0], -1])
     bbox_pred = np.reshape(bbox_pred, [bbox_pred.shape[0], -1])
-    if cfg.TEST.BBOX_REG:
+    if cfg.TEST_BBOX_REG:
         # Apply bounding-box regression deltas
         box_deltas = bbox_pred
         pred_boxes = bbox_transform_inv(boxes, box_deltas)
@@ -197,7 +194,7 @@ def im_detect(sess, net, im):
         # Simply repeat the boxes, once for each class
         pred_boxes = np.tile(boxes, (1, scores.shape[1]))
 
-    return scores, pred_boxes, boxes, roi_scores, anchors
+    return scores, pred_boxes
 
 
 if __name__ == '__main__':
@@ -238,11 +235,90 @@ if __name__ == '__main__':
 
     # writer = tf.summary.FileWriter("logs/", sess.graph)
 
+
     saver = tf.train.Saver()
     model = 'output/vgg16_faster_rcnn_iter_70000.ckpt'
     saver.restore(sess, model)
     print('Checkpoint loaded.')
 
+    #sess.run(tf.global_variables_initializer())
+
+    im = cv2.imread('a.jpg')
+    '''
+    blobs, im_scales = _get_blobs(im)
+    im_blob = blobs['data']
+    blobs['im_info'] = np.array([im_blob.shape[1], im_blob.shape[2], im_scales[0]], dtype=np.float32)
+    '''
+    #net.debug(sess, blobs['data'], blobs['im_info'])
+
+    scores, boxes = im_detect(sess, net, im)
+
+    print(scores.shape)
+    print(boxes.shape)
+
+    num_classes = dataset.num_classes
+
+    all_boxes = [[] for _ in range(num_classes)]
+
+    for j in range(1, num_classes):
+        inds = np.where(scores[:, j] > 0.)[0]
+        cls_scores = scores[inds, j]
+        cls_boxes = boxes[inds, j * 4:(j + 1) * 4]
+        cls_dets = np.hstack((cls_boxes, cls_scores[:, np.newaxis])) \
+            .astype(np.float32, copy=False)
+        #keep = nms(cls_dets, cfg.TEST.NMS)
+        #cls_dets = cls_dets[keep, :]
+        all_boxes[j] = cls_dets
+
+
+
+    image_scores = np.hstack([all_boxes[j][:, -1]
+                              for j in range(1, num_classes)])
+    #if len(image_scores) > max_per_image:
+    #image_thresh = np.sort(image_scores)[-20]
+    image_thresh = 0.965
+    for j in range(1, num_classes):
+        keep = np.where(all_boxes[j][:, -1] >= image_thresh)[0]
+        all_boxes[j] = all_boxes[j][keep, :]
+        print(all_boxes[j].shape)
+
+    """
+    tf.image.nms????????????????
+    """
+
+    colors = [
+        [0, 0, 0],
+        [255, 0, 0],
+        [0, 255, 0],
+        [0, 0, 255],
+        [255, 255, 0],
+        [255, 0, 255],
+        [0, 255, 255],
+        [255, 255, 255],
+        [120, 0, 0],
+        [0, 120, 0],
+        [0, 0, 120],  # 10
+        [120, 120, 0],
+        [120, 0, 120],
+        [36, 51, 138],
+        [120, 120, 120],
+        [120, 255, 0],
+        [120, 0, 255],
+        [0, 120, 255],
+        [255, 120, 0],
+        [255, 0, 120],
+        [0, 255, 120],
+    ]
+
+    for i in range(1, num_classes):
+        for j in all_boxes[i]:
+            if j[4] > 0.5:
+                cv2.rectangle(im, (j[0], j[1]), (j[2], j[3]), colors[i], 1)
+                cv2.putText(im, dataset.classes[i] + '=%.3f' % j[4], (int(j[0] + 3), int(j[1] + 16)), 0, 0.6, colors[i], 1)
+    cv2.imshow('image', im)
+    # cv2.imwrite('result.jpg', im)
+    cv2.waitKey(0)
+
     #test_net(sess, net, imdb, filename, max_per_image=args.max_per_image)
-    test_pic(sess, net, 'a.jpg', None, max_per_image=20)
+    #test_pic(sess, net, 'a.jpg', None, max_per_image=20)
     sess.close()

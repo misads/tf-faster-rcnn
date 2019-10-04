@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 def generate_anchors_pre(height, width, feat_stride=16, anchor_scales=(8, 16, 32), anchor_ratios=(0.5, 1, 2)):
     shift_x = tf.range(width) * feat_stride  # width
     shift_y = tf.range(height) * feat_stride  # height
@@ -20,6 +21,16 @@ def generate_anchors_pre(height, width, feat_stride=16, anchor_scales=(8, 16, 32
 
     return tf.cast(anchors_tf, dtype=tf.float32), length
 
+
+# array([[ -83.,  -39.,  100.,   56.],
+#       [-175.,  -87.,  192.,  104.],
+#       [-359., -183.,  376.,  200.],
+#       [ -55.,  -55.,   72.,   72.],
+#       [-119., -119.,  136.,  136.],
+#       [-247., -247.,  264.,  264.],
+#       [ -35.,  -79.,   52.,   96.],
+#       [ -79., -167.,   96.,  184.],
+#       [-167., -343.,  184.,  360.]])
 
 def generate_anchors(base_size=16, ratios=[0.5, 1, 2],
                      scales=2 ** np.arange(3, 6)):
